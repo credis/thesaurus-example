@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+    {% block javascript %}
+    {{ block.super }}
+    <script src="{{ STATIC_URL }}js/mustache.js" charset="utf-8" type="text/javascript"></script>
+    <script type="text/html" id="res-templ">
+
+      [[#facets ]] 
+      <h3> catégories </h3>
+       <ul> 
+       [[#categories ]] 
+        <li> [[ label ]] <a href="[[link]]">([[ count ]])</a></li>
+       [[/categories ]]
+       </ul>
+
+       <h3> tags </h3>
+       <ul> 
+      [[#tags ]] 
+        <li> [[ label ]] <a href="[[link]]">([[ count ]])</a></li>
+       [[/tags ]]
+       </ul>
+        [[/facets ]]
+      
+
+
+        <h3> Résultats </h3>
+        <ul>
+       [[#results ]] 
+        <li><a href="[[local_url]]">[[ &label ]]</a></li>
+       [[/results ]]
+       </ul>
+    </script>
+    {% endblock javascript %}
+
+
+{% block content %}
+
+<h2> {{ intro }} </h2>
+
+<div id="content" class="grid_4 grid">
+
+    <h2>Recherche</h2>
+
+    <form id="main_search" method="get" >
+        <table>
+            {{ form.as_table }}
+            <tr>
+                <td>&nbsp;</td>
+                <td>
+                    <input type="submit" value="Trouver">
+                </td>
+            </tr>
+        </table>
+
+
+	<div id="resultats"></div>
+	<script type="text/javascript">
+
+	function get_res(query, tmpl){
+			$.getJSON(
+				"/searchJson/?" + query,
+				function(data){
+					results_html = Mustache.render(tmpl,data);
+					$("#resultats").html(results_html)
+				}
+			)
+
+	};
+
+	$(function(){
+	    Mustache.tags = ['[[', ']]'];
+	    restmpl = $('#res-templ').html()
+
+	    var initParameters = window.location.search.substring(1);
+	    if (initParameters.length > 0) {
+	    	console.log(initParameters)
+	    	get_res(initParameters, restmpl)
+	    }
+
+
+		$('#main_search').submit(function() {
+		  get_res($(this).serialize(), restmpl);
+		  return false;
+		});
+
+	});
+	</script>
+</div>
+
+
+<div id="last concepts" class="grid_4 grid">
+  {% if last_concept %}
+        <h4>Les concepts dernièrement modifiés </h4>
+        <ul>
+            {% for i in last_concept %}
+                <li><a href="{{i.get_absolute_url}}">{{ i.prefLabels.0 }}</a> </li>
+            {%endfor%}
+        </ul>
+        <p><a href="/concept/">Toutes les concepts</a></p>
+    {% endif %}
+</div>
+
+
+
+<div id="last tags" class="grid_4 grid">
+  {% if last_tag %}
+        <h4>Les tags dernièrement modifiés </h4>
+        <ul>
+            {% for i in last_tag %}
+                <li><a href="{{i.get_absolute_url}}">{{ i.name }}</a> </li>
+            {%endfor%}
+        </ul>
+        <p><a href="/tag/">Tous les tags</a></p>
+        <p><a href="/tag/new/">Ajouter un nouveau tag</a></p>
+    {% endif %}
+</div>
+
+
+
+
+
+</div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+{% comment %}
+    <h4> Cartographie des strutures </h4>
+
+    <div id="map"> </div>
+
+	<script type="text/javascript">
+	   var map = new L.Map('map');
+	   var marseille = new L.LatLng(43.2964820, 5.3697800);
+	   map.setView(marseille, 8)
+		L.tileLayer('http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/997/256/{z}/{x}/{y}.png', {
+		    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>',
+		    maxZoom: 18
+		}).addTo(map);
+
+		geojsonMarkerOptions = {
+				    radius: 8,
+				    fillColor: "#81cb54",
+				    color: "#000",
+				    weight: 1,
+				    opacity: 1,
+				    fillOpacity: 0.6
+				};
+
+		$.getJSON("/geojson/organization/", function(data) {
+
+		        var geojson = L.geoJson(data, {
+
+
+		        // style for all vector layers (color, opacity, etc.), either function or object (optional)
+		        style: function (feature) {
+		            return feature.properties && feature.properties.style;
+		        },
+
+			    pointToLayer: function (feature, latlng) {
+			        return L.circleMarker(latlng, geojsonMarkerOptions);
+			    },
+
+
+		        // function for creating layers for GeoJSON point features (optional) 
+		        // default value
+		        // pointToLayer: function (feature, latlng) {
+		        //     return L.marker(latlng);
+		        // },
+
+
+		        // function that gets called on every created feature layer (optional)
+		        onEachFeature: function (feature, layer) {
+
+		            if (feature.properties && feature.properties.popupContent) {
+		                     layer.bindPopup(feature.properties.popupContent);
+		                 }
+		            // var content = feature.properties && feature.properties.popupContent;
+		            // if (content) {
+		            //     layer.bindPopup(content);
+		            // }
+		        }
+
+		    }).addTo(map);
+
+		    map.fitBounds(geojson.getBounds());
+
+		});
+
+	// to call jquery stuff, necessairy to use $.getJson
+    $(function(){});
+
+
+
+	</script>
+ {% endcomment %}
+
+{% endblock %}

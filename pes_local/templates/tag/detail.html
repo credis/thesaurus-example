@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Tag: {{tag.name}}</h2>
+
+
+    {% if tag.is_prefLabel_of %}
+        <div> est utilisé comme label préféré par : 
+        <ul>
+        {% for concept in tag.is_prefLabel_of %}
+            <li><a href="{{ concept.get_absolute_url }}">{{ concept.prefLabels.0 }}</a>
+            </li>
+        {% endfor %}
+        </ul>
+        </div>
+
+    {% endif %}
+
+
+
+<br/>
+<a href="edit/">Editer</a>  <br/>
+<a href="/concept/new/{{ tag.id }}">Créer un concept à partir de ce tag</a>  <br/>
+<a href="/tag/new/">Créer un nouveau tag</a> <br/>
+
+{% endblock %}
